@@ -7,12 +7,11 @@
 #include <iomanip>
 #include <stdio.h>
 
-#define NT 96
+#define NT 48
 #define NS 16
-//#define KAPPA 0.1373 // Kappa is the same for both mu0p006 and mu0p003
-#define KAPPA 0.137290 // Kappa for the physical point
-#define MU 0.0009
-#define NSTOCH 2250
+#define KAPPA 0.139305
+#define MU 0.006
+#define NSTOCH 512
 
 using namespace std;
 
@@ -37,6 +36,7 @@ public:
   void operator=(Matrix&);
   void transpose();
   Matrix commutator(Matrix&);
+  void signFlip();
   complex<double> trace();
 };
 
@@ -121,6 +121,12 @@ void Matrix::transpose(){
   for(int i = 0 ; i < m ; i++)
     for(int j = 0 ; j < n ; j++)
       this->data[i][j] = tmp.data[j][i];
+}
+
+void Matrix::signFlip(){
+  for(int i = 0 ; i < m ; i++)
+    for(int j = 0 ; j < n ; j++)
+      this->data[i][j] *= -1;
 }
 
 //complex<double>& Matrix::operator()(int i ,int j){
@@ -226,7 +232,7 @@ int main(int argc, char* argv[]){
   for(int mu = 0 ; mu < 4 ; mu++)
     for(int it = 0 ; it < NT; it++)
       for(int is = 0 ; is < NS ; is++){
-	int i = mu*NT+NS + it*NS + is;
+	int i = mu*NT*NS + it*NS + is;
 	f_standard_der >> dummy >> dummy >> dummy >> dummy >> dummy >> dummy >> loop_std_der_raw[i].real() >> loop_std_der_raw[i].imag();
 	f_generalized_der >> dummy >> dummy >> dummy >> dummy >> dummy >> dummy >> loop_gen_der_raw[i].real() >> loop_gen_der_raw[i].imag();
       }
@@ -317,8 +323,8 @@ int main(int argc, char* argv[]){
     for(int i = 0 ; i < NT ; i++)
       for(int a = 0 ; a < 4 ; a++)
 	for(int b = 0 ; b < 4 ; b++){
-	  m_std_der[mu*NT+i]->data[b][a] = loop_std_der_raw[4*NT*NS + i*NS + a*4 + b]; // take the transpose
-	  m_gen_der[mu*NT+i]->data[b][a] = loop_gen_der_raw[4*NT*NS + i*NS + a*4 + b];
+	  m_std_der[mu*NT+i]->data[b][a] = loop_std_der_raw[mu*NT*NS + i*NS + a*4 + b]; // take the transpose
+	  m_gen_der[mu*NT+i]->data[b][a] = loop_gen_der_raw[mu*NT*NS + i*NS + a*4 + b];
 	}
   //========================== create loops =====================//
   double results[NS];
@@ -439,15 +445,15 @@ int main(int argc, char* argv[]){
   *sigma_munu[0*4+1]=ig5Comm_g4g1;
   *sigma_munu[0*4+2]=ig5Comm_g4g2;
   *sigma_munu[0*4+3]=ig5Comm_g4g3;
-  *sigma_munu[1*4+0]=ig5Comm_g4g1; sigma_munu[1*4+0]->transpose(); // now take transpose
+  *sigma_munu[1*4+0]=ig5Comm_g4g1; sigma_munu[1*4+0]->signFlip(); 
   *sigma_munu[1*4+2]=ig5Comm_g1g2;
   *sigma_munu[1*4+3]=ig5Comm_g1g3;
-  *sigma_munu[2*4+0]=ig5Comm_g4g2; sigma_munu[2*4+0]->transpose();
-  *sigma_munu[2*4+1]=ig5Comm_g1g2; sigma_munu[2*4+1]->transpose();
+  *sigma_munu[2*4+0]=ig5Comm_g4g2; sigma_munu[2*4+0]->signFlip();
+  *sigma_munu[2*4+1]=ig5Comm_g1g2; sigma_munu[2*4+1]->signFlip();
   *sigma_munu[2*4+3]=ig5Comm_g2g3;
-  *sigma_munu[3*4+0]=ig5Comm_g4g3; sigma_munu[3*4+0]->transpose();
-  *sigma_munu[3*4+1]=ig5Comm_g1g3; sigma_munu[3*4+1]->transpose();
-  *sigma_munu[3*4+2]=ig5Comm_g2g3; sigma_munu[3*4+2]->transpose();
+  *sigma_munu[3*4+0]=ig5Comm_g4g3; sigma_munu[3*4+0]->signFlip();
+  *sigma_munu[3*4+1]=ig5Comm_g1g3; sigma_munu[3*4+1]->signFlip();
+  *sigma_munu[3*4+2]=ig5Comm_g2g3; sigma_munu[3*4+2]->signFlip();
 
   // accoring to Martha tensor derivative is real. For the tensor we need the standard one-end trick
   for(int i = 0 ; i < NT ; i++)
