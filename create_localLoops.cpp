@@ -7,9 +7,9 @@
 
 #define NT 48
 #define NS 16
-#define KAPPA 0.1373
+#define KAPPA 0.139305
 #define MU 0.006
-#define NSTOCH 7000
+#define NSTOCH 512
 
 using namespace std;
 
